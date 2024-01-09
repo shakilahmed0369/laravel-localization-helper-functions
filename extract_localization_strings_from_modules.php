@@ -9,7 +9,9 @@
  */
 
 
-function extractLocalizationStrings($directory)
+use Nwidart\Modules\Facades\Module;
+
+function extractLocalizationStrings($directory, $moduleName)
 {
     // Get all files recursively in the specified directory
     $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
@@ -27,6 +29,7 @@ function extractLocalizationStrings($directory)
         // Read the contents of the file
         $contents = file_get_contents($file->getPathname());
 
+
         // Extract localization strings excluding . (dot) using regular expression pattern
         preg_match_all('/__\([\'"](.+?)[\'"]\)/', $contents, $matches);
 
@@ -35,7 +38,7 @@ function extractLocalizationStrings($directory)
 
         // // Extract localization strings of trans method including . (dot) using regular expression pattern
         // preg_match_all('/trans\([\'"]([^\'"]+)[\'"]\)/', $contents, $matches);
-        
+
         // If any localization strings are found, store them in the array
         if (!empty($matches[1])) {
             foreach ($matches[1] as $match) {
@@ -48,10 +51,27 @@ function extractLocalizationStrings($directory)
     $phpArray = "<?php\n\nreturn " . var_export($localizationStrings, true) . ";\n";
 
     // Write the PHP code to a file named 'localization_strings.php'
-    file_put_contents('localization_strings.php', $phpArray);
+    file_put_contents($moduleName . '-localization_strings.php', $phpArray);
 }
 
-// Call the function with the resource_path directory path as an argument
-// extractLocalizationStrings(resource_path('views'));
-// Call the function with the app_path directory path as an argument
-// extractLocalizationStrings(app_path());
+$modules = Module::all();
+
+// Loop through the modules
+foreach ($modules as $module) {
+    $moduleName = $module->getName();
+    $modulePath = $module->getPath();
+    $moduleResourcePath = '';
+
+    // Now you can use $moduleName, $modulePath, and $moduleResourcePath as needed
+    echo "Module Name: $moduleName\n" . "<br />";
+    echo "Module Path: $modulePath\n" . "<br />";
+    $resouncePath = $modulePath . '/resources/views'; // for views
+    // $resouncePath = $modulePath . '/app'; // for app
+    if (is_dir($resouncePath)) {
+        $moduleResourcePath = $resouncePath;
+    }
+    echo "Module Resource Path: $moduleResourcePath" . "<br />";
+    extractLocalizationStrings($moduleResourcePath, $moduleName);
+}
+
+return;
