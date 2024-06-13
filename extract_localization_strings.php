@@ -1,6 +1,6 @@
 <?php
 
-function extractLocalizationStrings(array $directories)
+function extractLocalizationStrings(array $directories, array $ignoreDirs = [])
 {
     // Initialize an array to store the extracted localization strings
     $localizationStrings = [];
@@ -14,6 +14,19 @@ function extractLocalizationStrings(array $directories)
         foreach ($files as $file) {
             // Skip directories
             if ($file->isDir()) {
+                continue;
+            }
+
+            // Check if the file path contains any of the ignored directories
+            $skip = false;
+            foreach ($ignoreDirs as $ignoreDir) {
+                if (strpos($file->getPathname(), DIRECTORY_SEPARATOR . $ignoreDir . DIRECTORY_SEPARATOR) !== false) {
+                    $skip = true;
+                    break;
+                }
+            }
+
+            if ($skip) {
                 continue;
             }
 
@@ -54,4 +67,4 @@ function extractLocalizationStrings(array $directories)
     file_put_contents(lang_path().'/test.json', $json);
 }
 
-extractLocalizationStrings([resource_path('views'), base_path('Modules'), base_path('app')]);
+extractLocalizationStrings([resource_path('views'), base_path('Modules'), base_path('app')], ['vendor']);
